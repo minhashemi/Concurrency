@@ -15,15 +15,27 @@ public class BlockingTaskQueue {
         this.capacity = capacity;
     }
 
-    public void put(Task task) throws InterruptedException {
+    public synchronized void put(Task task) throws InterruptedException {
         // TODO: ap2025.hw4.BlockingTaskQueue put method
+        while (queue.size() == capacity) {
+            wait();
+        }
+        queue.add(task);
+        notifyAll();
+
+        synchronized (SchedulerMain.globalTaskNotificationLock) {
+            SchedulerMain.globalTaskNotificationLock.notifyAll();
+        }
     }
 
-    public Task take() throws InterruptedException {
+    public synchronized Task take() throws InterruptedException {
         Task task = null;
         // TODO: ap2025.hw4.BlockingTaskQueue take method (blocking)
-
-
+        while (queue.isEmpty()) {
+            wait();
+        }
+        task = queue.remove(0);
+        notifyAll();
         return task;
     }
 
@@ -31,8 +43,13 @@ public class BlockingTaskQueue {
 
         // TODO: ap2025.hw4.BlockingTaskQueue poll method (non-blocking)
         //  should return a ap2025.hw4.Task instead of null
+        if (queue.isEmpty()) {
+            return null;
+        }
+        Task task = queue.remove(0);
+        notifyAll();
+        return task;
 
-        return null;
     }
 
     public synchronized boolean isEmpty() {
