@@ -21,6 +21,8 @@ public class TaskProducer implements Runnable {
     public void run() {
         System.out.println("Producer " + producerId + " (Thread: " + Thread.currentThread().getName() + ") started.");
         Random random = new Random();
+
+        Priority[] priorities = Priority.values();
         for (int i = 0; i < numberOfTasksToProduce && !shutdownRequested; i++) {
             try {
                 int taskId = taskCounter.getAndIncrement();
@@ -29,6 +31,11 @@ public class TaskProducer implements Runnable {
                 //  based on the task's 'priority'. implement the rest based on the document.
 
                 // start of your implementation
+                Priority randomPriority = priorities[random.nextInt(priorities.length)];
+                Task task = new Task(taskId, "Task with priority " + randomPriority, randomPriority);
+                BlockingTaskQueue queue = priorityQueues.get(randomPriority);
+                System.out.println("Producer " + producerId + " is creating " + task);
+                queue.put(task);
 
 
                 // end of your implementation

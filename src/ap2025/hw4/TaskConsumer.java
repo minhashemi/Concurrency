@@ -26,7 +26,18 @@ public class TaskConsumer implements Runnable {
                 // TODO: Implement the core logic for a worker to get a task, respecting priorities and shutdown.
 
                 // start of your implementation
-
+                synchronized (SchedulerMain.globalTaskNotificationLock) {
+                    while ((task = attemptTakeByPriority()) == null) {
+                        // اگر وظیفه‌ای در هیچ‌کدام از صف‌ها نبود، شرایط خاموش شدن را بررسی می‌کنیم
+                        if (shutdownSignalReceived && areAllQueuesEmpty()) {
+                            System.out.println("Worker " + workerId + " sees shutdown signal and empty queues. Terminating.");
+                            return; // خروج از متد run و پایان کار ترد
+                        }
+                        // اگر سیگنال خاموش شدن نیامده یا هنوز وظایفی در صف‌ها باقی مانده،
+                        // ترد منتظر می‌ماند تا تولیدکننده‌ها آن را با خبر کنند.
+                        SchedulerMain.globalTaskNotificationLock.wait();
+                    }
+                }
 
                 // end of your implementation
 
@@ -68,6 +79,8 @@ public class TaskConsumer implements Runnable {
         // TODO: signal shutDown
         // Crucially, notify any workers waiting on the global lock so they can
         // re-evaluate their conditions (especially the shutdown condition).
-
+        synchronized (SchedulerMain.globalTaskNotificationLock) {
+            SchedulerMain.globalTaskNotificationLock.notifyAll();
+        }
     }
 }
