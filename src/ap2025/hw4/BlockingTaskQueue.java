@@ -23,6 +23,7 @@ public class BlockingTaskQueue {
         queue.add(task);
         notifyAll();
 
+        // Wake up sleeping consumer threads
         synchronized (SchedulerMain.globalTaskNotificationLock) {
             SchedulerMain.globalTaskNotificationLock.notifyAll();
         }
